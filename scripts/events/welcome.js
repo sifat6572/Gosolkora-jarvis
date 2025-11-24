@@ -287,8 +287,6 @@ module.exports = {
     }) => {
         const type = "log:subscribe";
         if (event.logMessageType != type) return;
-
-        console.log("🎉 [WELCOME] Subscribe event triggered!");
         
         try {
             await threadsData.refreshInfo(event.threadID);
@@ -303,11 +301,6 @@ module.exports = {
             const userName = event.logMessageData.addedParticipants[0].fullName;
             const authorN = await usersData.getName(by);
             
-            if (usernumber === 0) {
-                console.log("⚠️ [WELCOME] Warning: member count is 0, thread metadata may be missing");
-            }
-            
-            console.log(`📍 [WELCOME] Creating canvas for ${userName}...`);
             const welcomeImage = await createWelcomeCanvas(gcImg, img1, img2, userName, usernumber, threadName, authorN);
             
             const imagePath = path.join(__dirname, '../cmds/', global.utils.randomString(4) + ".png");
@@ -315,16 +308,12 @@ module.exports = {
             welcomeImage.pipe(writeStream);
             
             await new Promise((resolve) => {
-                writeStream.on('finish', () => {
-                    console.log("✅ [WELCOME] Canvas file ready");
-                    resolve();
-                });
+                writeStream.on('finish', resolve);
             });
 
             await message.send({
                 attachment: fs.createReadStream(imagePath)
             });
-            console.log("✅ [WELCOME] Welcome card sent!");
             
             fs.unlinkSync(imagePath);
         } catch (error) {
