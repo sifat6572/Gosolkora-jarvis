@@ -288,45 +288,43 @@ module.exports = {
         const type = "log:subscribe";
         if (event.logMessageType != type) return;
 
-        return async function () {
-            console.log("🎉 [WELCOME] Subscribe event triggered!");
+        console.log("🎉 [WELCOME] Subscribe event triggered!");
+        
+        try {
+            const threadsInfo = await threadsData.get(event.threadID);
+            const gcImg = threadsInfo.imageSrc;
+            const threadName = threadsInfo.threadName;
+            const joined = event.logMessageData.addedParticipants[0].userFbId;
+            const by = event.author;
+            const img1 = await usersData.getAvatarUrl(joined);
+            const img2 = await usersData.getAvatarUrl(by);
+            const usernumber = event.participantIDs.length;
+            const userName = event.logMessageData.addedParticipants[0].fullName;
+            const authorN = await usersData.getName(by);
             
-            try {
-                const threadsInfo = await threadsData.get(event.threadID);
-                const gcImg = threadsInfo.imageSrc;
-                const threadName = threadsInfo.threadName;
-                const joined = event.logMessageData.addedParticipants[0].userFbId;
-                const by = event.author;
-                const img1 = await usersData.getAvatarUrl(joined);
-                const img2 = await usersData.getAvatarUrl(by);
-                const usernumber = event.participantIDs.length;
-                const userName = event.logMessageData.addedParticipants[0].fullName;
-                const authorN = await usersData.getName(by);
-                
-                console.log(`📍 [WELCOME] Creating canvas for ${userName}...`);
-                const welcomeImage = await createWelcomeCanvas(gcImg, img1, img2, userName, usernumber, threadName, authorN);
-                
-                const imagePath = path.join(__dirname, '../cmds/', global.utils.randomString(4) + ".png");
-                const writeStream = fs.createWriteStream(imagePath);
-                welcomeImage.pipe(writeStream);
-                
-                await new Promise((resolve) => {
-                    writeStream.on('finish', () => {
-                        console.log("✅ [WELCOME] Canvas file ready");
-                        resolve();
-                    });
+            console.log(`📍 [WELCOME] Creating canvas for ${userName}...`);
+            const welcomeImage = await createWelcomeCanvas(gcImg, img1, img2, userName, usernumber, threadName, authorN);
+            
+            const imagePath = path.join(__dirname, '../cmds/', global.utils.randomString(4) + ".png");
+            const writeStream = fs.createWriteStream(imagePath);
+            welcomeImage.pipe(writeStream);
+            
+            await new Promise((resolve) => {
+                writeStream.on('finish', () => {
+                    console.log("✅ [WELCOME] Canvas file ready");
+                    resolve();
                 });
+            });
 
-                await message.send({
-                    attachment: fs.createReadStream(imagePath)
-                });
-                console.log("✅ [WELCOME] Welcome card sent!");
-                
-                fs.unlinkSync(imagePath);
-            } catch (error) {
-                console.error("❌ [WELCOME] Error:", error.message);
-                console.error(error.stack);
-            }
-        };
+            await message.send({
+                attachment: fs.createReadStream(imagePath)
+            });
+            console.log("✅ [WELCOME] Welcome card sent!");
+            
+            fs.unlinkSync(imagePath);
+        } catch (error) {
+            console.error("❌ [WELCOME] Error:", error.message);
+            console.error(error.stack);
+        }
     }
 };
