@@ -5,23 +5,23 @@
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-24T11:17:49.939Z",
-    "lastAccessed": "2025-11-24T11:17:52.885Z",
+    "creation": "2025-11-24T11:20:17.390Z",
+    "lastAccessed": "2025-11-24T11:20:22.660Z",
     "secure": false,
     "httpOnly": false,
-    "expires": "2026-11-24T11:17:49.000Z"
+    "expires": "2026-11-24T11:20:17.000Z"
   },
   {
     "key": "fr",
-    "value": "0NmGYrXn1y4tGFpWY.AWdUUce4sbOjwBbSnw0Rso475XRs2A5HtUirfbFUtlnCojNMmd8.BpIzLO..AAA.0.0.BpJD7e.AWf_MEAQcptEZk4Ir8-cVOLRJbg",
+    "value": "0NmGYrXn1y4tGFpWY.AWe3LV3jez1ggt_XWVdn3AMBaOwWMuoe0jY06rd0S3IhsOzbT_0.BpIzLO..AAA.0.0.BpJD9x.AWeMsYVLKUxmtPsY9oU7QkDFVhw",
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-24T11:17:49.946Z",
-    "lastAccessed": "2025-11-24T11:17:52.885Z",
+    "creation": "2025-11-24T11:20:17.397Z",
+    "lastAccessed": "2025-11-24T11:20:22.660Z",
     "secure": true,
     "httpOnly": true,
-    "expires": "2026-02-22T11:17:50.000Z"
+    "expires": "2026-02-22T11:20:17.000Z"
   },
   {
     "key": "xs",
@@ -29,11 +29,11 @@
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-24T11:17:49.947Z",
-    "lastAccessed": "2025-11-24T11:17:52.885Z",
+    "creation": "2025-11-24T11:20:17.398Z",
+    "lastAccessed": "2025-11-24T11:20:22.660Z",
     "secure": false,
     "httpOnly": false,
-    "expires": "2026-11-24T11:17:49.000Z"
+    "expires": "2026-11-24T11:20:17.000Z"
   },
   {
     "key": "c_user",
@@ -41,11 +41,11 @@
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-24T11:17:49.947Z",
-    "lastAccessed": "2025-11-24T11:17:52.885Z",
+    "creation": "2025-11-24T11:20:17.398Z",
+    "lastAccessed": "2025-11-24T11:20:22.660Z",
     "secure": false,
     "httpOnly": false,
-    "expires": "2026-11-24T11:17:49.000Z"
+    "expires": "2026-11-24T11:20:17.000Z"
   },
   {
     "key": "sb",
@@ -53,10 +53,10 @@
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-24T11:17:49.948Z",
-    "lastAccessed": "2025-11-24T11:17:52.885Z",
+    "creation": "2025-11-24T11:20:17.398Z",
+    "lastAccessed": "2025-11-24T11:20:22.660Z",
     "secure": false,
     "httpOnly": false,
-    "expires": "2026-11-24T11:17:49.000Z"
+    "expires": "2026-11-24T11:20:17.000Z"
   }
 ]
