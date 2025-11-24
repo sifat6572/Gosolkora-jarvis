@@ -368,6 +368,7 @@ function message(api, event) {
                                         setErrorUptime();
                                         throw err;
                                 }
+                                console.error("❌ [REACTION] Error setting reaction:", err.message || err);
                         }
                 },
                 err: async (err) => await sendMessageError(err),
