@@ -7,7 +7,7 @@ const path = require("path");
 module.exports = {
 	config: {
 		name: "sing",
-		version: "1.3",
+		version: "1.4",
 		author: "NeoKEX",
 		countDown: 5,
 		role: 0,
@@ -54,16 +54,11 @@ module.exports = {
 			// Step 1: Search for video using yt-search
 			let videoUrl;
 			let videoTitle;
-			let videoId;
 
 			if (query.match(/^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie|youtubeembedding)\.(com|be)\//)) {
-				// Input is a YouTube URL - extract video ID
-				const idMatch = query.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
-				videoId = idMatch ? idMatch[1] : null;
-				videoUrl = videoId ? `https://youtu.be/${videoId}` : query;
+				videoUrl = query;
 				videoTitle = "Audio";
 			} else {
-				// Search for video using yt-search
 				const searchResults = await search(query);
 
 				if (!searchResults || searchResults.videos.length === 0) {
@@ -71,69 +66,69 @@ module.exports = {
 					return message.reply(getLang("noResult", query));
 				}
 
-				// Get first video result
 				const video = searchResults.videos[0];
 				videoUrl = video.url;
 				videoTitle = video.title;
-				videoId = video.videoId;
 			}
 
-			// Step 2: Download and get audio using btch-downloader with retry
+			// Step 2: Get audio metadata using btch-downloader
 			let downloadData = null;
-			let retryCount = 0;
-			const maxRetries = 3;
 
-			while (retryCount < maxRetries && !downloadData) {
-				try {
-					// Try with short URL format (youtu.be)
-					const urlToTry = videoId ? `https://youtu.be/${videoId}` : videoUrl;
-					downloadData = await youtube(urlToTry);
-					
-					if (downloadData && downloadData.status) {
-						break;
-					}
-					
-					// If failed, wait before retry
-					if (retryCount < maxRetries - 1) {
-						await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-					}
-					retryCount++;
-				} catch (err) {
-					if (retryCount < maxRetries - 1) {
-						await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-					}
-					retryCount++;
-				}
+			try {
+				downloadData = await youtube(videoUrl);
+			} catch (err) {
+				console.log("btch-downloader error:", err.message);
+				api.setMessageReaction("❌", event.messageID, () => {}, true);
+				return message.reply(getLang("noAudio"));
 			}
 
 			if (!downloadData || !downloadData.status) {
+				console.log("btch-downloader status false:", JSON.stringify(downloadData));
 				api.setMessageReaction("❌", event.messageID, () => {}, true);
 				return message.reply(getLang("noAudio"));
 			}
 
-			// Extract audio URL from btch-downloader response
+			// Debug log to see actual response structure
+			console.log("btch-downloader response keys:", Object.keys(downloadData));
+			console.log("mp3 type:", typeof downloadData.mp3);
+			console.log("mp3 value:", downloadData.mp3);
+
+			// Try multiple ways to extract audio URL
 			let audioUrl = null;
 
-			if (typeof downloadData.mp3 === "string") {
+			// Try direct mp3 property
+			if (typeof downloadData.mp3 === "string" && downloadData.mp3.startsWith("http")) {
 				audioUrl = downloadData.mp3;
-			} else if (Array.isArray(downloadData.mp3) && downloadData.mp3.length > 0) {
-				const mp3 = downloadData.mp3[0];
-				audioUrl = typeof mp3 === "string" ? mp3 : mp3.url;
+			}
+			// Try mp3 array first element
+			else if (Array.isArray(downloadData.mp3) && downloadData.mp3.length > 0) {
+				const mp3Item = downloadData.mp3[0];
+				if (typeof mp3Item === "string") {
+					audioUrl = mp3Item;
+				} else if (mp3Item.url) {
+					audioUrl = mp3Item.url;
+				}
+			}
+			// Try fallback url property
+			else if (typeof downloadData.url === "string") {
+				audioUrl = downloadData.url;
 			}
 
 			if (!audioUrl) {
+				console.log("No audio URL found in response");
 				api.setMessageReaction("❌", event.messageID, () => {}, true);
 				return message.reply(getLang("noAudio"));
 			}
 
-			// Step 3: Download the audio file with browser-like headers and retry
-			let response = null;
-			let downloadRetries = 0;
-			const maxDownloadRetries = 2;
+			console.log("Using audio URL:", audioUrl);
 
-			while (downloadRetries < maxDownloadRetries && !response) {
+			// Step 3: Download the audio file
+			let downloadAttempts = 0;
+			let savedFile = null;
+
+			while (downloadAttempts < 2 && !savedFile) {
 				try {
-					response = await axios({
+					const response = await axios({
 						method: "GET",
 						url: audioUrl,
 						responseType: "stream",
@@ -141,80 +136,73 @@ module.exports = {
 							'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
 							'Accept': '*/*',
 							'Accept-Language': 'en-US,en;q=0.9',
-							'Accept-Encoding': 'gzip, deflate, br',
 							'Referer': 'https://www.youtube.com/',
 							'Origin': 'https://www.youtube.com',
-							'DNT': '1',
-							'Connection': 'keep-alive',
-							'Upgrade-Insecure-Requests': '1',
 						},
-						timeout: 30000,
-						maxRedirects: 5,
+						timeout: 45000,
+						maxRedirects: 10,
 						validateStatus: () => true
 					});
 
-					// Check for success
-					if (response.status < 400) {
-						break;
+					if (response.status >= 400) {
+						console.log(`Download attempt ${downloadAttempts + 1} failed with status: ${response.status}`);
+						downloadAttempts++;
+						if (downloadAttempts < 2) {
+							await new Promise(resolve => setTimeout(resolve, 2000));
+						}
+						continue;
 					}
 
-					response = null;
-					if (downloadRetries < maxDownloadRetries - 1) {
-						await new Promise(resolve => setTimeout(resolve, 1000));
-					}
-					downloadRetries++;
+					// Save the file
+					const tmpDir = path.join(__dirname, "tmp");
+					fs.ensureDirSync(tmpDir);
+					const savePath = path.join(tmpDir, `audio_${Date.now()}.mp3`);
+
+					await new Promise((resolve, reject) => {
+						const writeStream = fs.createWriteStream(savePath);
+						response.data
+							.pipe(writeStream)
+							.on("finish", () => {
+								console.log("File saved successfully to:", savePath);
+								savedFile = savePath;
+								resolve();
+							})
+							.on("error", reject);
+					});
+
 				} catch (err) {
-					response = null;
-					if (downloadRetries < maxDownloadRetries - 1) {
-						await new Promise(resolve => setTimeout(resolve, 1000));
+					console.log(`Download attempt ${downloadAttempts + 1} error:`, err.message);
+					downloadAttempts++;
+					if (downloadAttempts < 2) {
+						await new Promise(resolve => setTimeout(resolve, 2000));
 					}
-					downloadRetries++;
 				}
 			}
 
-			if (!response || response.status >= 400) {
+			if (!savedFile) {
 				api.setMessageReaction("❌", event.messageID, () => {}, true);
-				return message.reply(getLang("error", "Failed to download audio"));
+				return message.reply(getLang("error", "Download failed after retries"));
 			}
 
-			const contentLength = parseInt(response.headers["content-length"] || 0);
-			if (contentLength > MAX_SIZE && contentLength > 0) {
-				api.setMessageReaction("❌", event.messageID, () => {}, true);
-				return message.reply(getLang("noAudio"));
-			}
-
-			// Save file temporarily
-			const tmpDir = path.join(__dirname, "tmp");
-			fs.ensureDirSync(tmpDir);
-			const savePath = path.join(tmpDir, `audio_${Date.now()}.mp3`);
-			const writeStream = fs.createWriteStream(savePath);
-
-			response.data.pipe(writeStream);
-
-			writeStream.on("finish", () => {
-				message.reply({
-					body: videoTitle,
-					attachment: fs.createReadStream(savePath)
-				}, (err) => {
-					if (err) {
-						api.setMessageReaction("❌", event.messageID, () => {}, true);
-						return message.reply(getLang("error", err.message));
-					}
-					try {
-						fs.unlinkSync(savePath);
-					} catch (e) {
-						// File already deleted
-					}
-					api.setMessageReaction("✅", event.messageID, () => {}, true);
-				});
-			});
-
-			writeStream.on("error", (err) => {
-				api.setMessageReaction("❌", event.messageID, () => {}, true);
-				return message.reply(getLang("error", err.message));
+			// Send the file
+			message.reply({
+				body: videoTitle,
+				attachment: fs.createReadStream(savedFile)
+			}, (err) => {
+				if (err) {
+					api.setMessageReaction("❌", event.messageID, () => {}, true);
+					return message.reply(getLang("error", err.message));
+				}
+				try {
+					fs.unlinkSync(savedFile);
+				} catch (e) {
+					// Ignore delete errors
+				}
+				api.setMessageReaction("✅", event.messageID, () => {}, true);
 			});
 
 		} catch (err) {
+			console.log("Sing command error:", err);
 			api.setMessageReaction("❌", event.messageID, () => {}, true);
 			return message.reply(getLang("error", err.message));
 		}
