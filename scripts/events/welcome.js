@@ -100,13 +100,13 @@ async function createWelcomeCanvas(gcImg, img1, img2, userName, userNumber, thre
         ctx.rotate((sq.rotation * Math.PI) / 180);
 
         const sqGradient = ctx.createLinearGradient(-sq.size / 2, -sq.size / 2, sq.size / 2, sq.size / 2);
-        sqGradient.addColorStop(0, 'rgba(34, 197, 94, 0.3)');
-        sqGradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+        sqGradient.addColorStop(0, 'rgba(249, 115, 22, 0.3)');
+        sqGradient.addColorStop(1, 'rgba(234, 88, 12, 0.1)');
 
         ctx.fillStyle = sqGradient;
         ctx.fillRect(-sq.size / 2, -sq.size / 2, sq.size, sq.size);
 
-        ctx.strokeStyle = 'rgba(34, 197, 94, 0.5)';
+        ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)';
         ctx.lineWidth = 2;
         ctx.strokeRect(-sq.size / 2, -sq.size / 2, sq.size, sq.size);
 
@@ -153,12 +153,12 @@ async function createWelcomeCanvas(gcImg, img1, img2, userName, userNumber, thre
         ctx.beginPath();
         ctx.arc(circ.x, circ.y, circ.radius, 0, Math.PI * 2);
         const circGradient = ctx.createRadialGradient(circ.x, circ.y, 0, circ.x, circ.y, circ.radius);
-        circGradient.addColorStop(0, `rgba(34, 197, 94, ${circ.alpha})`);
-        circGradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+        circGradient.addColorStop(0, `rgba(249, 115, 22, ${circ.alpha})`);
+        circGradient.addColorStop(1, 'rgba(234, 88, 12, 0)');
         ctx.fillStyle = circGradient;
         ctx.fill();
 
-        ctx.strokeStyle = `rgba(34, 197, 94, ${circ.alpha * 2})`;
+        ctx.strokeStyle = `rgba(249, 115, 22, ${circ.alpha * 2})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
     });
@@ -199,12 +199,12 @@ async function createWelcomeCanvas(gcImg, img1, img2, userName, userNumber, thre
         ctx.closePath();
 
         const triGradient = ctx.createLinearGradient(-tri.size / 2, 0, tri.size / 2, 0);
-        triGradient.addColorStop(0, 'rgba(34, 197, 94, 0.2)');
-        triGradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+        triGradient.addColorStop(0, 'rgba(249, 115, 22, 0.2)');
+        triGradient.addColorStop(1, 'rgba(234, 88, 12, 0.1)');
         ctx.fillStyle = triGradient;
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)';
+        ctx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -239,28 +239,28 @@ async function createWelcomeCanvas(gcImg, img1, img2, userName, userNumber, thre
             ctx.fill();
         }
     }
-    await drawCircularImage(img2, width - 120, 100, 55, '#22c55e');
+    await drawCircularImage(img2, width - 120, 100, 55, '#f97316');
     ctx.font = 'bold 20px CoreSansAR, sans-serif';
-    ctx.fillStyle = '#22c55e';
+    ctx.fillStyle = '#f97316';
     ctx.textAlign = 'right';
     ctx.fillText('Added by '+potato, width - 190, 105);
-    await drawCircularImage(img1, 120, height - 100, 55, '#10b981');
+    await drawCircularImage(img1, 120, height - 100, 55, '#ea580c');
     ctx.font = 'bold 24px CoreSansAR, sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
     ctx.fillText(userName, 190, height - 95);
-    await drawCircularImage(gcImg, width / 2, 200, 90, '#22c55e', 6);
+    await drawCircularImage(gcImg, width / 2, 200, 90, '#f97316', 6);
     ctx.font = 'bold 42px CoreSansAR, sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.fillText(threadName, width / 2, 335);
     ctx.font = 'bold 56px CoreSansAR, sans-serif';
     const nameGradient = ctx.createLinearGradient(width / 2 - 200, 0, width / 2 + 200, 0);
-    nameGradient.addColorStop(0, '#22c55e');
-    nameGradient.addColorStop(1, '#10b981');
+    nameGradient.addColorStop(0, '#f97316');
+    nameGradient.addColorStop(1, '#ea580c');
     ctx.fillStyle = nameGradient;
     ctx.fillText('WELCOME', width / 2, 410);
-    ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)';
+    ctx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(width / 2 - 180, 430);
