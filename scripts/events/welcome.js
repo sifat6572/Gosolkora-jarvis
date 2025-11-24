@@ -285,34 +285,65 @@ module.exports = {
     onStart: async ({
         threadsData, event, message, usersData
     }) => {
-    const type = "log:subscribe";
-    if (event.logMessageType != type) return;
-        const threadsInfo = await threadsData.get(event.threadID);
-        const gcImg = threadsInfo.imageSrc;
-        const threadName = threadsInfo.threadName;
-        const joined = event.logMessageData.addedParticipants[0].userFbId;
-        const by = event.author;
-        const img1 = await usersData.getAvatarUrl(joined);
-        const img2 = await usersData.getAvatarUrl(by);
-        const usernumber = event.participantIDs.length;
-        const userName = event.logMessageData.addedParticipants[0].fullName;
-        const authorN = await usersData.getName(by);
+        console.log("🔍 [WELCOME] Event triggered. Type:", event.logMessageType);
+        
+        const type = "log:subscribe";
+        if (event.logMessageType != type) {
+            console.log("❌ [WELCOME] Not a subscribe event. Skipping.");
+            return;
+        }
+        
+        console.log("✅ [WELCOME] Subscribe event confirmed");
         
         try {
-            const welcomeImage = await createWelcomeCanvas(gcImg, img1, img2, userName, usernumber, threadName, authorN);
+            console.log("📍 [WELCOME] Fetching thread info...");
+            const threadsInfo = await threadsData.get(event.threadID);
+            console.log("✅ [WELCOME] Thread info fetched");
             
+            const gcImg = threadsInfo.imageSrc;
+            const threadName = threadsInfo.threadName;
+            const joined = event.logMessageData.addedParticipants[0].userFbId;
+            const by = event.author;
+            
+            console.log("📍 [WELCOME] Fetching avatars...");
+            const img1 = await usersData.getAvatarUrl(joined);
+            const img2 = await usersData.getAvatarUrl(by);
+            console.log("✅ [WELCOME] Avatars fetched");
+            
+            const usernumber = event.participantIDs.length;
+            const userName = event.logMessageData.addedParticipants[0].fullName;
+            const authorN = await usersData.getName(by);
+            
+            console.log(`📍 [WELCOME] Creating canvas for ${userName}...`);
+            const welcomeImage = await createWelcomeCanvas(gcImg, img1, img2, userName, usernumber, threadName, authorN);
+            console.log("✅ [WELCOME] Canvas created successfully");
+            
+            console.log("📍 [WELCOME] Creating temp file...");
             const imagePath = path.join(__dirname, '../cmds/', global.utils.randomString(4) + ".png");
             const writeStream = fs.createWriteStream(imagePath);
             welcomeImage.pipe(writeStream);
-            await new Promise((resolve) => writeStream.on('finish', resolve));
+            await new Promise((resolve) => {
+                writeStream.on('finish', () => {
+                    console.log("✅ [WELCOME] Temp file created");
+                    resolve();
+                });
+                writeStream.on('error', (err) => {
+                    console.error("❌ [WELCOME] File write error:", err);
+                    resolve();
+                });
+            });
 
+            console.log("📍 [WELCOME] Sending message with attachment...");
             await message.send({
                 attachment: fs.createReadStream(imagePath)
             });
+            console.log("✅ [WELCOME] Message sent!");
+            
             fs.unlinkSync(imagePath);
-            console.log("✅ Welcome card sent");
+            console.log("✅ [WELCOME] Temp file cleaned up");
         } catch (error) {
-            console.error("Welcome error:", error);
+            console.error("❌ [WELCOME] Error:", error.message);
+            console.error("❌ [WELCOME] Stack:", error.stack);
         }
     }
 };
