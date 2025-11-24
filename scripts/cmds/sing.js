@@ -1,13 +1,11 @@
 const search = require("yt-search");
 const { youtube } = require("btch-downloader");
 const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
 
 module.exports = {
 	config: {
 		name: "sing",
-		version: "1.8",
+		version: "2.1",
 		author: "NeoKEX",
 		countDown: 5,
 		role: 0,
@@ -84,45 +82,25 @@ module.exports = {
 				return message.reply(getLang("noAudio"));
 			}
 
-			// Decode HTML entities in URL (&amp; -> &)
+			// Decode HTML entities in URL
 			audioUrl = audioUrl.replace(/&amp;/g, "&");
 
-			// Step 3: Stream the audio URL
-			const tmpDir = path.join(__dirname, "tmp");
-			fs.ensureDirSync(tmpDir);
-			const savePath = path.join(tmpDir, `audio_${Date.now()}.mp3`);
-
+			// Step 3: Stream the audio URL directly
 			const response = await axios({
 				method: "GET",
 				url: audioUrl,
-				responseType: "stream",
-				headers: {
-					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-				},
-				timeout: 60000,
-				maxRedirects: 10
+				responseType: "stream"
 			});
 
-			const writeStream = fs.createWriteStream(savePath);
-			response.data.pipe(writeStream);
-
-			writeStream.on("finish", () => {
-				message.reply({
-					body: videoTitle,
-					attachment: fs.createReadStream(savePath)
-				}, (err) => {
-					try { fs.unlinkSync(savePath); } catch (e) { }
-					if (!err) {
-						api.setMessageReaction("✅", event.messageID, () => {}, true);
-					} else {
-						api.setMessageReaction("❌", event.messageID, () => {}, true);
-					}
-				});
-			});
-
-			writeStream.on("error", (err) => {
-				api.setMessageReaction("❌", event.messageID, () => {}, true);
-				message.reply(getLang("error", err.message));
+			message.reply({
+				body: videoTitle,
+				attachment: response.data
+			}, (err) => {
+				if (err) {
+					api.setMessageReaction("❌", event.messageID, () => {}, true);
+				} else {
+					api.setMessageReaction("✅", event.messageID, () => {}, true);
+				}
 			});
 
 		} catch (err) {
