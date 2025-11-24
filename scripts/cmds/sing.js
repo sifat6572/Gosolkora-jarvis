@@ -5,7 +5,7 @@ const axios = require("axios");
 module.exports = {
 	config: {
 		name: "sing",
-		version: "2.2",
+		version: "2.3",
 		author: "NeoKEX",
 		countDown: 5,
 		role: 0,
@@ -36,7 +36,6 @@ module.exports = {
 	onStart: async function ({ args, message, event, api, getLang }) {
 		console.log("[SING] ========== START COMMAND ==========");
 		console.log("[SING] Args:", args);
-		console.log("[SING] Query:", args.join(" "));
 
 		if (!args.length) {
 			console.log("[SING] Error: No arguments provided");
@@ -44,9 +43,9 @@ module.exports = {
 		}
 
 		const query = args.join(" ");
+		console.log("[SING] Query:", query);
 
 		try {
-			console.log("[SING] Setting reaction to ⏳");
 			api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
 			// Step 1: Search for video using yt-search
@@ -80,10 +79,7 @@ module.exports = {
 			console.log("[SING] Calling youtube() with URL:", videoUrl);
 			const downloadData = await youtube(videoUrl);
 			console.log("[SING] Response received");
-			console.log("[SING] Response status:", downloadData?.status);
-			console.log("[SING] Response keys:", Object.keys(downloadData || {}));
-			console.log("[SING] mp3 type:", typeof downloadData?.mp3);
-			console.log("[SING] mp3 value:", downloadData?.mp3);
+			console.log("[SING] FULL RESPONSE:", JSON.stringify(downloadData, null, 2));
 
 			if (!downloadData || !downloadData.status) {
 				console.log("[SING] Error: Invalid download data or status false");
@@ -94,14 +90,38 @@ module.exports = {
 			// Extract audio URL
 			console.log("[SING] ===== STEP 3: Extract Audio URL =====");
 			let audioUrl = null;
-			if (typeof downloadData.mp3 === "string") {
-				console.log("[SING] mp3 is string");
-				audioUrl = downloadData.mp3;
-			} else if (Array.isArray(downloadData.mp3) && downloadData.mp3.length > 0) {
-				console.log("[SING] mp3 is array with", downloadData.mp3.length, "items");
-				const mp3 = downloadData.mp3[0];
-				audioUrl = typeof mp3 === "string" ? mp3 : mp3.url;
-				console.log("[SING] Extracted URL from array");
+			
+			// Check all possible fields for audio URL
+			if (downloadData.mp3) {
+				console.log("[SING] Found downloadData.mp3");
+				if (typeof downloadData.mp3 === "string") {
+					audioUrl = downloadData.mp3;
+					console.log("[SING] mp3 is string");
+				} else if (Array.isArray(downloadData.mp3) && downloadData.mp3.length > 0) {
+					const mp3 = downloadData.mp3[0];
+					audioUrl = typeof mp3 === "string" ? mp3 : mp3.url;
+					console.log("[SING] mp3 is array");
+				}
+			} else if (downloadData.audio) {
+				console.log("[SING] Found downloadData.audio");
+				audioUrl = typeof downloadData.audio === "string" ? downloadData.audio : downloadData.audio.url;
+			} else if (downloadData.url) {
+				console.log("[SING] Found downloadData.url");
+				audioUrl = downloadData.url;
+			} else if (downloadData.downloadUrl) {
+				console.log("[SING] Found downloadData.downloadUrl");
+				audioUrl = downloadData.downloadUrl;
+			} else {
+				// Log all keys to see what's available
+				console.log("[SING] No standard URL fields found. Available keys:", Object.keys(downloadData));
+				for (const key of Object.keys(downloadData)) {
+					const val = downloadData[key];
+					if (typeof val === "string" && val.includes("http")) {
+						console.log("[SING] Found URL in key:", key, "=", val.substring(0, 100) + "...");
+						audioUrl = val;
+						break;
+					}
+				}
 			}
 
 			console.log("[SING] Raw audio URL:", audioUrl);
@@ -117,7 +137,7 @@ module.exports = {
 			const beforeDecode = audioUrl;
 			audioUrl = audioUrl.replace(/&amp;/g, "&");
 			console.log("[SING] Contains &amp;:", beforeDecode.includes("&amp;"));
-			console.log("[SING] Decoded audio URL:", audioUrl.substring(0, 100) + "...");
+			console.log("[SING] Final audio URL:", audioUrl.substring(0, 100) + "...");
 
 			// Step 3: Stream the audio URL directly
 			console.log("[SING] ===== STEP 5: Axios Stream =====");
@@ -130,7 +150,6 @@ module.exports = {
 			});
 
 			console.log("[SING] Axios response status:", response.status);
-			console.log("[SING] Axios response headers:", response.headers);
 			console.log("[SING] Sending to user...");
 
 			message.reply({
