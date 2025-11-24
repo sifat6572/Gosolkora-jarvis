@@ -5,7 +5,7 @@ const axios = require("axios");
 module.exports = {
 	config: {
 		name: "sing",
-		version: "2.3",
+		version: "2.4",
 		author: "NeoKEX",
 		countDown: 5,
 		role: 0,
@@ -35,113 +35,68 @@ module.exports = {
 
 	onStart: async function ({ args, message, event, api, getLang }) {
 		console.log("[SING] ========== START COMMAND ==========");
-		console.log("[SING] Args:", args);
 
 		if (!args.length) {
-			console.log("[SING] Error: No arguments provided");
 			return message.SyntaxError();
 		}
 
 		const query = args.join(" ");
-		console.log("[SING] Query:", query);
 
 		try {
 			api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
 			// Step 1: Search for video using yt-search
-			console.log("[SING] ===== STEP 1: yt-search =====");
 			let videoUrl, videoTitle;
 
 			if (query.match(/^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie|youtubeembedding)\.(com|be)\//)) {
-				console.log("[SING] Direct YouTube URL detected");
 				videoUrl = query;
 				videoTitle = "Audio";
 			} else {
-				console.log("[SING] Searching for:", query);
 				const searchResults = await search(query);
-				console.log("[SING] Search results count:", searchResults?.videos?.length || 0);
-
 				if (!searchResults || searchResults.videos.length === 0) {
-					console.log("[SING] No search results found");
 					api.setMessageReaction("❌", event.messageID, () => {}, true);
 					return message.reply(getLang("noResult", query));
 				}
-
 				const video = searchResults.videos[0];
 				videoUrl = video.url;
 				videoTitle = video.title;
-				console.log("[SING] First result - Title:", videoTitle);
-				console.log("[SING] Video URL:", videoUrl);
+				console.log("[SING] Found video:", videoTitle);
 			}
 
 			// Step 2: Get download URL from btch-downloader
-			console.log("[SING] ===== STEP 2: btch-downloader =====");
-			console.log("[SING] Calling youtube() with URL:", videoUrl);
+			console.log("[SING] Calling btch-downloader...");
 			const downloadData = await youtube(videoUrl);
-			console.log("[SING] Response received");
-			console.log("[SING] FULL RESPONSE:", JSON.stringify(downloadData, null, 2));
+			
+			console.log("[SING] Response type:", typeof downloadData);
+			console.log("[SING] Response status:", downloadData.status);
+			console.log("[SING] Response title:", downloadData.title);
+			console.log("[SING] Response thumbnail:", downloadData.thumbnail);
+			console.log("[SING] Response author:", downloadData.author);
+			console.log("[SING] Response mp3:", downloadData.mp3);
+			console.log("[SING] Response mp4:", downloadData.mp4);
 
 			if (!downloadData || !downloadData.status) {
-				console.log("[SING] Error: Invalid download data or status false");
+				console.log("[SING] Error: No valid response");
 				api.setMessageReaction("❌", event.messageID, () => {}, true);
 				return message.reply(getLang("noAudio"));
 			}
 
 			// Extract audio URL
-			console.log("[SING] ===== STEP 3: Extract Audio URL =====");
-			let audioUrl = null;
-			
-			// Check all possible fields for audio URL
-			if (downloadData.mp3) {
-				console.log("[SING] Found downloadData.mp3");
-				if (typeof downloadData.mp3 === "string") {
-					audioUrl = downloadData.mp3;
-					console.log("[SING] mp3 is string");
-				} else if (Array.isArray(downloadData.mp3) && downloadData.mp3.length > 0) {
-					const mp3 = downloadData.mp3[0];
-					audioUrl = typeof mp3 === "string" ? mp3 : mp3.url;
-					console.log("[SING] mp3 is array");
-				}
-			} else if (downloadData.audio) {
-				console.log("[SING] Found downloadData.audio");
-				audioUrl = typeof downloadData.audio === "string" ? downloadData.audio : downloadData.audio.url;
-			} else if (downloadData.url) {
-				console.log("[SING] Found downloadData.url");
-				audioUrl = downloadData.url;
-			} else if (downloadData.downloadUrl) {
-				console.log("[SING] Found downloadData.downloadUrl");
-				audioUrl = downloadData.downloadUrl;
-			} else {
-				// Log all keys to see what's available
-				console.log("[SING] No standard URL fields found. Available keys:", Object.keys(downloadData));
-				for (const key of Object.keys(downloadData)) {
-					const val = downloadData[key];
-					if (typeof val === "string" && val.includes("http")) {
-						console.log("[SING] Found URL in key:", key, "=", val.substring(0, 100) + "...");
-						audioUrl = val;
-						break;
-					}
-				}
-			}
-
-			console.log("[SING] Raw audio URL:", audioUrl);
+			let audioUrl = downloadData.mp3;
+			console.log("[SING] Audio URL type:", typeof audioUrl);
+			console.log("[SING] Audio URL:", audioUrl);
 
 			if (!audioUrl) {
-				console.log("[SING] Error: No audio URL extracted");
+				console.log("[SING] Error: No audio URL");
 				api.setMessageReaction("❌", event.messageID, () => {}, true);
 				return message.reply(getLang("noAudio"));
 			}
 
 			// Decode HTML entities in URL
-			console.log("[SING] ===== STEP 4: Decode URL =====");
-			const beforeDecode = audioUrl;
 			audioUrl = audioUrl.replace(/&amp;/g, "&");
-			console.log("[SING] Contains &amp;:", beforeDecode.includes("&amp;"));
-			console.log("[SING] Final audio URL:", audioUrl.substring(0, 100) + "...");
 
 			// Step 3: Stream the audio URL directly
-			console.log("[SING] ===== STEP 5: Axios Stream =====");
-			console.log("[SING] Starting axios request");
+			console.log("[SING] Streaming audio...");
 			const response = await axios({
 				method: "GET",
 				url: audioUrl,
@@ -150,28 +105,22 @@ module.exports = {
 			});
 
 			console.log("[SING] Axios response status:", response.status);
-			console.log("[SING] Sending to user...");
 
 			message.reply({
 				body: videoTitle,
 				attachment: response.data
 			}, (err) => {
-				console.log("[SING] ===== SEND RESULT =====");
 				if (err) {
-					console.log("[SING] Error sending:", err.message);
+					console.log("[SING] Error:", err.message);
 					api.setMessageReaction("❌", event.messageID, () => {}, true);
 				} else {
-					console.log("[SING] Success! Audio sent");
+					console.log("[SING] Success!");
 					api.setMessageReaction("✅", event.messageID, () => {}, true);
 				}
 			});
 
 		} catch (err) {
-			console.log("[SING] ===== ERROR =====");
-			console.log("[SING] Error message:", err.message);
-			console.log("[SING] Error code:", err.code);
-			console.log("[SING] Error status:", err.response?.status);
-			console.log("[SING] Stack:", err.stack);
+			console.log("[SING] Error:", err.message);
 			api.setMessageReaction("❌", event.messageID, () => {}, true);
 			return message.reply(getLang("error", err.message));
 		}
