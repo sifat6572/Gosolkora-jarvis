@@ -53,44 +53,32 @@ module.exports = {
                         // Get video data from btch-downloader
                         const ytData = await youtube(query);
 
-                        if (!ytData.status) {
+                        if (!ytData || !ytData.status) {
                                 api.setMessageReaction("❌", event.messageID, () => {}, true);
                                 return message.reply(getLang("noResult", query));
                         }
 
-                        // Check if mp3 array exists and has at least one option
-                        if (!ytData.mp3 || !Array.isArray(ytData.mp3) || ytData.mp3.length === 0) {
-                                api.setMessageReaction("❌", event.messageID, () => {}, true);
-                                return message.reply(getLang("noAudio"));
-                        }
-
-                        // Get the first (highest quality) MP3 option
-                        const mp3Data = ytData.mp3[0];
-                        const audioUrl = mp3Data.url;
+                        // Extract title
                         const title = ytData.title || "Audio";
+
+                        // Handle mp3 - could be array of objects or direct URL string
+                        let audioUrl = null;
+
+                        if (typeof ytData.mp3 === "string") {
+                                // mp3 is a direct URL
+                                audioUrl = ytData.mp3;
+                        } else if (Array.isArray(ytData.mp3) && ytData.mp3.length > 0) {
+                                // mp3 is an array of objects
+                                const mp3Data = ytData.mp3[0];
+                                audioUrl = mp3Data.url || mp3Data;
+                        } else if (typeof ytData.url === "string") {
+                                // Maybe url is the direct download link
+                                audioUrl = ytData.url;
+                        }
 
                         if (!audioUrl) {
                                 api.setMessageReaction("❌", event.messageID, () => {}, true);
                                 return message.reply(getLang("noAudio"));
-                        }
-
-                        // Check file size from btch-downloader response
-                        if (mp3Data.size) {
-                                const sizeStr = mp3Data.size.toString();
-                                let sizeInBytes = 0;
-
-                                if (sizeStr.includes("MB")) {
-                                        sizeInBytes = parseFloat(sizeStr) * 1024 * 1024;
-                                } else if (sizeStr.includes("KB")) {
-                                        sizeInBytes = parseFloat(sizeStr) * 1024;
-                                } else {
-                                        sizeInBytes = parseInt(sizeStr);
-                                }
-
-                                if (sizeInBytes > MAX_SIZE) {
-                                        api.setMessageReaction("❌", event.messageID, () => {}, true);
-                                        return message.reply(getLang("noAudio"));
-                                }
                         }
 
                         // Download the audio
@@ -103,6 +91,12 @@ module.exports = {
                                 },
                                 timeout: 30000
                         });
+
+                        const contentLength = parseInt(response.headers["content-length"] || 0);
+                        if (contentLength > MAX_SIZE && contentLength > 0) {
+                                api.setMessageReaction("❌", event.messageID, () => {}, true);
+                                return message.reply(getLang("noAudio"));
+                        }
 
                         // Save file temporarily
                         const tmpDir = path.join(__dirname, "tmp");
