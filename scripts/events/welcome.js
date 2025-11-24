@@ -291,6 +291,7 @@ module.exports = {
         console.log("🎉 [WELCOME] Subscribe event triggered!");
         
         try {
+            await threadsData.refreshInfo(event.threadID);
             const threadsInfo = await threadsData.get(event.threadID);
             const gcImg = threadsInfo.imageSrc;
             const threadName = threadsInfo.threadName;
@@ -298,9 +299,13 @@ module.exports = {
             const by = event.author;
             const img1 = await usersData.getAvatarUrl(joined);
             const img2 = await usersData.getAvatarUrl(by);
-            const usernumber = event.participantIDs.length;
+            const usernumber = threadsInfo.members?.length || 1;
             const userName = event.logMessageData.addedParticipants[0].fullName;
             const authorN = await usersData.getName(by);
+            
+            if (usernumber === 0) {
+                console.log("⚠️ [WELCOME] Warning: member count is 0, thread metadata may be missing");
+            }
             
             console.log(`📍 [WELCOME] Creating canvas for ${userName}...`);
             const welcomeImage = await createWelcomeCanvas(gcImg, img1, img2, userName, usernumber, threadName, authorN);
