@@ -44,8 +44,10 @@ module.exports = {
                 }
 
                 const query = args.join(" ").replace("?feature=share", "");
+                const MAX_SIZE = 27262976; // ~26MB
 
                 try {
+                        // Set loading reaction
                         api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
                         // Get video data from btch-downloader
@@ -72,6 +74,25 @@ module.exports = {
                                 return message.reply(getLang("noAudio"));
                         }
 
+                        // Check file size from btch-downloader response
+                        if (mp3Data.size) {
+                                const sizeStr = mp3Data.size.toString();
+                                let sizeInBytes = 0;
+
+                                if (sizeStr.includes("MB")) {
+                                        sizeInBytes = parseFloat(sizeStr) * 1024 * 1024;
+                                } else if (sizeStr.includes("KB")) {
+                                        sizeInBytes = parseFloat(sizeStr) * 1024;
+                                } else {
+                                        sizeInBytes = parseInt(sizeStr);
+                                }
+
+                                if (sizeInBytes > MAX_SIZE) {
+                                        api.setMessageReaction("❌", event.messageID, () => {}, true);
+                                        return message.reply(getLang("noAudio"));
+                                }
+                        }
+
                         // Download the audio
                         const response = await axios({
                                 method: "GET",
@@ -82,14 +103,6 @@ module.exports = {
                                 },
                                 timeout: 30000
                         });
-
-                        const contentLength = parseInt(response.headers["content-length"] || 0);
-                        const MAX_SIZE = 27262976; // ~26MB
-
-                        if (contentLength > MAX_SIZE) {
-                                api.setMessageReaction("❌", event.messageID, () => {}, true);
-                                return message.reply(getLang("noAudio"));
-                        }
 
                         // Save file temporarily
                         const tmpDir = path.join(__dirname, "tmp");
