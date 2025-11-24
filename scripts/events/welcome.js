@@ -1,13 +1,19 @@
-const fontPath = process.cwd() + "/scripts/cmds/canvas/fonts/Rounded.otf";
 const {
     createCanvas,
     loadImage,
     registerFont
 } = require('canvas');
 
-registerFont(fontPath, {
-    family: 'CoreSansAR'
-});
+let customFontLoaded = false;
+try {
+    const fontPath = process.cwd() + "/scripts/cmds/canvas/fonts/Rounded.otf";
+    registerFont(fontPath, {
+        family: 'CoreSansAR'
+    });
+    customFontLoaded = true;
+} catch (err) {
+    console.log("Custom font failed to load, using fallback fonts");
+}
 
 module.exports = {
     config: {
@@ -26,14 +32,12 @@ module.exports = {
             const { nickNameBot } = global.GoatBot.config;
             const dataAddedParticipants = event.logMessageData.addedParticipants;
 
-            // if new member is bot
             if (dataAddedParticipants.some((item) => item.userFbId == api.getCurrentUserID())) {
                 if (nickNameBot)
                     api.changeNickname(nickNameBot, threadID, api.getCurrentUserID());
                 return;
             }
 
-            // Get thread and user data
             const threadsInfo = await threadsData.get(threadID);
             const gcImg = threadsInfo.imageSrc;
             const threadName = threadsInfo.threadName;
@@ -56,7 +60,6 @@ module.exports = {
                 });
             } catch (error) {
                 console.error("Error creating welcome canvas:", error);
-                // Fallback to text message if canvas fails
                 message.send(`Welcome ${userName} to ${threadName}! You are the ${usernumber}th member.`);
             }
         };
@@ -66,6 +69,9 @@ module.exports = {
             const height = 600;
             const canvas = createCanvas(width, height);
             const ctx = canvas.getContext('2d');
+            
+            const fontFamily = customFontLoaded ? 'CoreSansAR' : 'Arial';
+            
             ctx.fillStyle = '#0a0a0a';
             ctx.fillRect(0, 0, width, height);
 
@@ -83,6 +89,7 @@ module.exports = {
             lightGradient.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
             ctx.fillStyle = lightGradient;
             ctx.fillRect(0, 0, width, height);
+            
             const squares = [{
                 x: 50,
                 y: 50,
@@ -162,6 +169,7 @@ module.exports = {
 
                 ctx.restore();
             });
+            
             const circles = [{
                 x: 250,
                 y: 250,
@@ -212,6 +220,7 @@ module.exports = {
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
             });
+            
             const triangles = [{
                 x: 550,
                 y: 150,
@@ -289,33 +298,39 @@ module.exports = {
                     ctx.fill();
                 }
             }
+            
             await drawCircularImage(img2, width - 120, 100, 55, '#22c55e');
-            ctx.font = 'bold 20px CoreSansAR, sans-serif';
+            ctx.font = `bold 20px ${fontFamily}, sans-serif`;
             ctx.fillStyle = '#22c55e';
             ctx.textAlign = 'right';
             ctx.fillText('Added by ' + potato, width - 190, 105);
+            
             await drawCircularImage(img1, 120, height - 100, 55, '#10b981');
-            ctx.font = 'bold 24px CoreSansAR, sans-serif';
+            ctx.font = `bold 24px ${fontFamily}, sans-serif`;
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
             ctx.fillText(userName, 190, height - 95);
+            
             await drawCircularImage(gcImg, width / 2, 200, 90, '#22c55e', 6);
-            ctx.font = 'bold 42px CoreSansAR, sans-serif';
+            ctx.font = `bold 42px ${fontFamily}, sans-serif`;
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.fillText(threadName, width / 2, 335);
-            ctx.font = 'bold 56px CoreSansAR, sans-serif';
+            
+            ctx.font = `bold 56px ${fontFamily}, sans-serif`;
             const nameGradient = ctx.createLinearGradient(width / 2 - 200, 0, width / 2 + 200, 0);
             nameGradient.addColorStop(0, '#22c55e');
             nameGradient.addColorStop(1, '#10b981');
             ctx.fillStyle = nameGradient;
             ctx.fillText('WELCOME', width / 2, 410);
+            
             ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(width / 2 - 180, 430);
             ctx.lineTo(width / 2 + 180, 430);
             ctx.stroke();
+            
             ctx.font = 'bold 26px sans-serif';
             ctx.fillStyle = '#a0a0a0';
             ctx.textAlign = 'center';
