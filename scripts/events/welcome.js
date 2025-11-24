@@ -57,7 +57,7 @@ module.exports = {
                                 // {time}          : current time
                                 // {session}       : morning/noon/afternoon/evening
 
-                                let { welcomeMessage = getLang("defaultWelcomeMessage") } = threadData.data || {};
+                                let { welcomeMessage = getLang("defaultWelcomeMessage") } = threadData.data;
 
                                 const form = {
                                         mentions: welcomeMessage.match(/\{userNameTag\}/g) ? [{
@@ -87,7 +87,7 @@ module.exports = {
                                         }];
                                 }
 
-                                if (threadData.data?.welcomeAttachment) {
+                                if (threadData.data.welcomeAttachment) {
                                         const files = threadData.data.welcomeAttachment;
                                         const attachments = files.reduce((acc, file) => {
                                                 acc.push(drive.getFile(file, "stream"));
