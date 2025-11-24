@@ -1,32 +1,12 @@
-const axios = require("axios");
 const { youtube } = require("btch-downloader");
+const axios = require("axios");
 const fs = require("fs-extra");
 const path = require("path");
-const search = require("yt-search");
-const { getStreamFromURL } = global.utils;
-
-async function getStreamAndSize(url, filePath = "") {
-        const response = await axios({
-                method: "GET",
-                url,
-                responseType: "stream",
-                headers: {
-                        'Range': 'bytes=0-'
-                }
-        });
-        if (filePath)
-                response.data.path = filePath;
-        const totalLength = response.headers["content-length"];
-        return {
-                stream: response.data,
-                size: totalLength
-        };
-}
 
 module.exports = {
         config: {
                 name: "sing",
-                version: "1.3",
+                version: "1.1",
                 author: "NeoKEX",
                 countDown: 5,
                 role: 0,
@@ -40,14 +20,14 @@ module.exports = {
                                 + "\n   Ví dụ:"
                                 + "\n    {pn} Fallen Kingdom",
                         en: "   {pn} <song name>: download audio from YouTube"
-                                + "\n   Example:"
+                                + "\n    Example:"
                                 + "\n    {pn} Fallen Kingdom"
                 }
         },
 
         langs: {
                 vi: {
-                        error: "✗ Đã xảy xảy ra lỗi: %1",
+                        error: "✗ Đã xảy ra lỗi: %1",
                         noResult: "⭕ Không có kết quả tìm kiếm nào phù hợp với từ khóa %1",
                         noAudio: "⭕ Rất tiếc, không tìm thấy audio nào có dung lượng nhỏ hơn 26MB"
                 },
@@ -59,92 +39,89 @@ module.exports = {
         },
 
         onStart: async function ({ args, message, event, api, getLang }) {
-                let query = args.join(" ");
-                if (!query) {
+                if (!args.length) {
                         return message.SyntaxError();
                 }
 
-                query = query.includes("?feature=share") ? query.replace("?feature=share", "") : query;
-
-                const checkurl = /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})(?:\S+)?$/;
-                const urlYtb = checkurl.test(query);
-
-                let videoUrl;
-                let songTitle = "Unknown Song";
-
-                if (urlYtb) {
-                    videoUrl = query;
-                } else {
-                    let results;
-                    try {
-                        results = await search(query);
-                    } catch (err) {
-                        return message.reply(getLang("error", err.message));
-                    }
-
-                    if (!results || results.videos.length < 2)
-                        return message.reply(getLang("noResult", query));
-
-                    const videoResult = results.videos[1];
-                    videoUrl = videoResult.url;
-                    songTitle = videoResult.title || "Unknown Song";
-                }
+                const query = args.join(" ").replace("?feature=share", "");
 
                 try {
                         api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
-                        const videoIdMatch = videoUrl.match(/(?:youtu\.be\/|v=)([^&?]+)/);
-                        const videoId = videoIdMatch ? videoIdMatch[1] : 'temp';
+                        // Get video data from btch-downloader
+                        const ytData = await youtube(query);
 
-                        const MAX_SIZE = 27262976;
+                        if (!ytData.status) {
+                                api.setMessageReaction("❌", event.messageID, () => {}, true);
+                                return message.reply(getLang("noResult", query));
+                        }
 
-                        const ytData = await youtube(videoUrl);
-
-                        if (!ytData || !ytData.mp3) {
+                        // Check if mp3 array exists and has at least one option
+                        if (!ytData.mp3 || !Array.isArray(ytData.mp3) || ytData.mp3.length === 0) {
                                 api.setMessageReaction("❌", event.messageID, () => {}, true);
                                 return message.reply(getLang("noAudio"));
                         }
 
-                        const audioUrl = ytData.mp3;
+                        // Get the first (highest quality) MP3 option
+                        const mp3Data = ytData.mp3[0];
+                        const audioUrl = mp3Data.url;
+                        const title = ytData.title || "Audio";
 
-                        const getStream = await getStreamAndSize(audioUrl, `${videoId}.mp3`);
-
-                        const actualSize = parseInt(getStream.size);
-
-                        if (isNaN(actualSize) || actualSize <= 0) {
-                            api.setMessageReaction("❌", event.messageID, () => {}, true);
-                            return message.reply(getLang("error", "Failed to determine audio file size.")); 
-                        }
-
-                        if (actualSize > MAX_SIZE) {
+                        if (!audioUrl) {
                                 api.setMessageReaction("❌", event.messageID, () => {}, true);
                                 return message.reply(getLang("noAudio"));
                         }
 
+                        // Download the audio
+                        const response = await axios({
+                                method: "GET",
+                                url: audioUrl,
+                                responseType: "stream",
+                                headers: {
+                                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                                },
+                                timeout: 30000
+                        });
+
+                        const contentLength = parseInt(response.headers["content-length"] || 0);
+                        const MAX_SIZE = 27262976; // ~26MB
+
+                        if (contentLength > MAX_SIZE) {
+                                api.setMessageReaction("❌", event.messageID, () => {}, true);
+                                return message.reply(getLang("noAudio"));
+                        }
+
+                        // Save file temporarily
                         const tmpDir = path.join(__dirname, "tmp");
                         fs.ensureDirSync(tmpDir);
-                        const savePath = path.join(tmpDir, `${videoId}_${Date.now()}.mp3`);
+                        const savePath = path.join(tmpDir, `audio_${Date.now()}.mp3`);
                         const writeStream = fs.createWriteStream(savePath);
-                        getStream.stream.pipe(writeStream);
+
+                        response.data.pipe(writeStream);
 
                         writeStream.on("finish", () => {
                                 message.reply({
-                                        body: songTitle,
+                                        body: title,
                                         attachment: fs.createReadStream(savePath)
-                                }, async (err) => {
+                                }, (err) => {
                                         if (err) {
                                                 api.setMessageReaction("❌", event.messageID, () => {}, true);
                                                 return message.reply(getLang("error", err.message));
                                         }
-                                        fs.unlinkSync(savePath);
+                                        try {
+                                                fs.unlinkSync(savePath);
+                                        } catch (e) {
+                                                // File already deleted
+                                        }
                                         api.setMessageReaction("✅", event.messageID, () => {}, true);
                                 });
                         });
 
                         writeStream.on("error", (err) => {
                                 api.setMessageReaction("❌", event.messageID, () => {}, true);
-                                message.reply(getLang("error", err.message));
+                                return message.reply(getLang("error", err.message));
                         });
+
                 } catch (err) {
                         api.setMessageReaction("❌", event.messageID, () => {}, true);
                         return message.reply(getLang("error", err.message));
