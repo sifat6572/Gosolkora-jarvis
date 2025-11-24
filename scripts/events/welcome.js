@@ -29,76 +29,78 @@ module.exports = {
 		if (event.logMessageType != "log:subscribe")
 			return;
 
-		const { threadID } = event;
-		const threadData = await threadsData.get(threadID);
+		return async function () {
+			const { threadID } = event;
+			const threadData = await threadsData.get(threadID);
 
-		if (!threadData.settings.sendWelcomeMessage)
-			return;
+			if (!threadData.settings.sendWelcomeMessage)
+				return;
 
-		const { addedParticipants } = event.logMessageData;
-		
-		if (!addedParticipants || addedParticipants.length === 0)
-			return;
+			const { addedParticipants } = event.logMessageData;
 
-		const joinedUser = addedParticipants[0];
-		const joinedUserID = joinedUser.userFbId;
+			if (!addedParticipants || addedParticipants.length === 0)
+				return;
 
-		// Don't send welcome for bot itself
-		if (joinedUserID == api.getCurrentUserID())
-			return;
+			const joinedUser = addedParticipants[0];
+			const joinedUserID = joinedUser.userFbId;
 
-		const threadName = threadData.threadName;
-		const userName = await usersData.getName(joinedUserID);
-		const hours = getTime("HH");
+			// Don't send welcome for bot itself
+			if (joinedUserID == api.getCurrentUserID())
+				return;
 
-		// {userName}      : name of the user who joined
-		// {threadName}    : name of the group
-		// {boxName}       : name of the box (same as threadName)
-		// {memberCount}   : total members in group
-		// {time}          : current time
-		// {session}       : morning/noon/afternoon/evening
+			const threadName = threadData.threadName;
+			const userName = await usersData.getName(joinedUserID);
+			const hours = getTime("HH");
 
-		let { welcomeMessage = getLang("defaultWelcomeMessage") } = threadData.data || {};
+			// {userName}      : name of the user who joined
+			// {threadName}    : name of the group
+			// {boxName}       : name of the box (same as threadName)
+			// {memberCount}   : total members in group
+			// {time}          : current time
+			// {session}       : morning/noon/afternoon/evening
 
-		const form = {
-			mentions: welcomeMessage.match(/\{userNameTag\}/g) ? [{
-				tag: userName,
-				id: joinedUserID
-			}] : null
+			let { welcomeMessage = getLang("defaultWelcomeMessage") } = threadData.data || {};
+
+			const form = {
+				mentions: welcomeMessage.match(/\{userNameTag\}/g) ? [{
+					tag: userName,
+					id: joinedUserID
+				}] : null
+			};
+
+			welcomeMessage = welcomeMessage
+				.replace(/\{userName\}|\{userNameTag\}/g, userName)
+				.replace(/\{threadName\}|\{boxName\}/g, threadName)
+				.replace(/\{memberCount\}/g, event.participantIDs.length)
+				.replace(/\{time\}/g, hours)
+				.replace(/\{session\}/g, 
+					hours <= 10 ? getLang("session1") :
+					hours <= 12 ? getLang("session2") :
+					hours <= 18 ? getLang("session3") :
+					getLang("session4")
+				);
+
+			form.body = welcomeMessage;
+
+			if (welcomeMessage.includes("{userNameTag}")) {
+				form.mentions = [{
+					id: joinedUserID,
+					tag: userName
+				}];
+			}
+
+			if (threadData.data?.welcomeAttachment) {
+				const files = threadData.data.welcomeAttachment;
+				const attachments = files.reduce((acc, file) => {
+					acc.push(drive.getFile(file, "stream"));
+					return acc;
+				}, []);
+				form.attachment = (await Promise.allSettled(attachments))
+					.filter(({ status }) => status == "fulfilled")
+					.map(({ value }) => value);
+			}
+
+			message.send(form);
 		};
-
-		welcomeMessage = welcomeMessage
-			.replace(/\{userName\}|\{userNameTag\}/g, userName)
-			.replace(/\{threadName\}|\{boxName\}/g, threadName)
-			.replace(/\{memberCount\}/g, event.participantIDs.length)
-			.replace(/\{time\}/g, hours)
-			.replace(/\{session\}/g, 
-				hours <= 10 ? getLang("session1") :
-				hours <= 12 ? getLang("session2") :
-				hours <= 18 ? getLang("session3") :
-				getLang("session4")
-			);
-
-		form.body = welcomeMessage;
-
-		if (welcomeMessage.includes("{userNameTag}")) {
-			form.mentions = [{
-				id: joinedUserID,
-				tag: userName
-			}];
-		}
-
-		if (threadData.data?.welcomeAttachment) {
-			const files = threadData.data.welcomeAttachment;
-			const attachments = files.reduce((acc, file) => {
-				acc.push(drive.getFile(file, "stream"));
-				return acc;
-			}, []);
-			form.attachment = (await Promise.allSettled(attachments))
-				.filter(({ status }) => status == "fulfilled")
-				.map(({ value }) => value);
-		}
-
-		message.send(form);
 	}
 };
