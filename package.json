@@ -9,7 +9,6 @@
         },
         "dependencies": {
                 "@distube/ytdl-core": "^4.13.3",
-                "@dongdev/fca-unofficial": "^2.0.32",
                 "axios": "^1.4.0",
                 "bcrypt": "^5.0.1",
                 "btch-downloader": "^6.0.22",

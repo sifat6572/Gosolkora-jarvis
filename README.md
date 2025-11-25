@@ -20,7 +20,7 @@
   
   <p>
     <strong>🚀 No Google Credentials Required!</strong><br>
-    <em>Uses @dongdev/fca-unofficial for seamless Facebook integration</em>
+    <em>Uses neokex-fca for seamless Facebook integration</em>
   </p>
 </div>
 
@@ -62,7 +62,7 @@
 ## 📝 **Important Notes**
 
 > ⚠️ **Account Safety First**
-> - This bot uses [@dongdev/fca-unofficial](https://github.com/DongDev-VN/fca-unofficial) (Facebook Chat API)
+> - This bot uses [neokex-fca](https://github.com/NeoKEX/neokex-fca) (Facebook Chat API)
 > - **No Google API credentials needed** - Simple setup with just your Facebook account
 > - Using unofficial APIs may risk account restrictions
 > - **Recommended:** Use a secondary/clone Facebook account
