@@ -161,7 +161,7 @@ module.exports = async (api) => {
         app.get("/stats", async (req, res) => {
                 let fcaVersion;
                 try {
-                        fcaVersion = require("@dongdev/fca-unofficial/package.json").version;
+                        fcaVersion = require("fca-neokex/package.json").version;
                 }
                 catch (e) {
                         fcaVersion = "unknown";

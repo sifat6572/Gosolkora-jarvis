@@ -170,7 +170,7 @@ Preferred communication style: Simple, everyday language.
 ### Key NPM Packages
 
 **Core Framework**
-- `@dongdev/fca-unofficial`: Facebook Chat API client
+- `fca-neokex`: Facebook Chat API client
 - `express`: Web server for dashboard
 - `socket.io`: WebSocket communication
 - `passport` + `passport-local`: Authentication

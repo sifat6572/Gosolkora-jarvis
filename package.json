@@ -9,7 +9,6 @@
         },
         "dependencies": {
                 "@distube/ytdl-core": "^4.13.3",
-                "@dongdev/fca-unofficial": "^2.0.32",
                 "axios": "^1.4.0",
                 "bcrypt": "^5.0.1",
                 "btch-downloader": "^6.0.22",
@@ -23,6 +22,7 @@
                 "express-fileupload": "^1.4.0",
                 "express-rate-limit": "^6.5.2",
                 "express-session": "^1.17.3",
+                "fca-neokex": "^1.0.1",
                 "form-data": "^4.0.0",
                 "fs": "^0.0.1-security",
                 "fs-extra": "^11.1.0",
@@ -34,7 +34,6 @@
                 "moment-timezone": "^0.5.34",
                 "mongoose": "^6.3.1",
                 "mqtt": "^4.3.7",
-                "neokex-fca": "^4.5.3",
                 "node-cron": "^3.0.2",
                 "npmlog": "^7.0.1",
                 "ora": "^5.4.1",
@@ -52,7 +51,6 @@
                 "tinyurl": "^1.1.7",
                 "totp-generator": "^0.0.13",
                 "websocket-stream": "^5.5.2",
-                "ws3-fca": "^3.5.2",
                 "yt-search": "^2.13.1"
         },
         "scripts": {
