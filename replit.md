@@ -89,14 +89,35 @@ Preferred communication style: Simple, everyday language.
 
 ### Facebook API Integration
 
-**Custom Fork: @dongdev/fca-unofficial**
+**Custom Library: neokex-fca**
 - MQTT-based message listening for real-time events
 - Automatic reconnection handling with configurable intervals
-- Checkpoint detection and recovery
+- Enhanced anti-detection features (see below)
 - User/thread info caching
 - Message sending with attachment support (images, videos, audio)
 - Friend request handling
 - Message editing and unsending
+
+**Anti-Detection Enhancements** (node_modules/neokex-fca):
+- **Context-Aware Rate Limiting**:
+  - Stochastic delay envelopes with ±30% variance
+  - Message type awareness (text, attachments, replies)
+  - Burst detection (5+ messages in 10s → 2x delay)
+  - Circadian rhythm simulation (3x slower 2-6 AM, normal 9-18)
+  - Checkpoint-aware backoff mode (5x slower when detected)
+  - Behavioral metrics tracking per thread
+- **Smart Checkpoint Detection**:
+  - URL-based (redirects to /checkpoint/, /login/)
+  - Form-based (checkpoint form IDs, login forms)
+  - Text-based (security check, session expired messages)
+  - Error-based (checkpoint/session errors in responses)
+  - Avoids false positives from normal logged-in pages
+- **Automatic Session Recovery**:
+  - Integration with existing AutoReLoginManager
+  - Fresh login via loginHelper when cookies expire
+  - Database cookie backup and restore
+  - Retry logic with exponential backoff
+  - Enables continuous bot operation until natural cookie expiry
 
 **Cookie Management**
 - Persistent cookie storage in JSON format
@@ -201,3 +222,11 @@ Preferred communication style: Simple, everyday language.
 - ✅ **Fixed Railway deployment**: Removed healthcheck requirements from railway.json
 - ✅ **Unified file paths**: Simplified Goat.js, dashboard/connectDB.js, dashboard/app.js to use consistent file paths
 - ✅ **Bot now stable on all platforms**: Local, Railway, and Render deployments all working
+
+**Facebook API Library Migration** (November 2025)
+- ✅ **Migrated from @dongdev/fca-unofficial to neokex-fca**
+- ✅ **Enhanced RateLimiter**: Context-aware delays, circadian rhythm, burst detection, checkpoint backoff
+- ✅ **Smart TokenRefreshManager**: Specific checkpoint detection, auto-relogin integration
+- ✅ **Automatic Session Recovery**: Integrated with AutoReLoginManager for fresh login on cookie expiry
+- ✅ **Anti-Detection Features**: Human-like behavioral patterns to prevent Facebook bot detection
+- 📍 **Important**: All modifications made in `node_modules/neokex-fca/` only (not bot directory)

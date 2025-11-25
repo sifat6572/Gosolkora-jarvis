@@ -2,55 +2,55 @@
   {
     "key": "datr",
     "value": "zjIjaX_T7d08zC3HlFOicE2m",
-    "expires": "2026-11-25T04:36:22.000Z",
+    "expires": "2026-11-25T04:55:53.000Z",
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-25T04:36:22.524Z",
-    "lastAccessed": "2025-11-25T04:36:27.027Z"
+    "creation": "2025-11-25T04:55:53.945Z",
+    "lastAccessed": "2025-11-25T04:55:58.749Z"
   },
   {
     "key": "fr",
-    "value": "0NmGYrXn1y4tGFpWY.AWeQRiztkzYKu8hffMA6uoVQcYELZFPnYiPPu9fjb8GujRIb_iI.BpIzLO..AAA.0.0.BpJTJH.AWfvUP3xg-WHX42x-2kztzJ_ivs",
-    "expires": "2026-02-23T04:36:23.000Z",
+    "value": "0NmGYrXn1y4tGFpWY.AWdr9DWbiBGZPYplLYqj0-yucb2aLBYpePPLCYvMIwSWXdpEy3E.BpIzLO..AAA.0.0.BpJTba.AWe1Zc1EfHk7qTARGrkZytCeBFY",
+    "expires": "2026-02-23T04:55:54.000Z",
     "maxAge": 7776000,
     "domain": "facebook.com",
     "path": "/",
     "secure": true,
     "httpOnly": true,
     "hostOnly": false,
-    "creation": "2025-11-25T04:36:22.525Z",
-    "lastAccessed": "2025-11-25T04:36:27.027Z",
+    "creation": "2025-11-25T04:55:53.967Z",
+    "lastAccessed": "2025-11-25T04:55:58.749Z",
     "sameSite": "none"
   },
   {
     "key": "xs",
     "value": "49%3AxVxzbJNZcxugXw%3A2%3A1763981760%3A-1%3A-1",
-    "expires": "2026-11-25T04:36:22.000Z",
+    "expires": "2026-11-25T04:55:53.000Z",
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-25T04:36:22.526Z",
-    "lastAccessed": "2025-11-25T04:36:27.027Z"
+    "creation": "2025-11-25T04:55:53.968Z",
+    "lastAccessed": "2025-11-25T04:55:58.749Z"
   },
   {
     "key": "c_user",
     "value": "61577632319942",
-    "expires": "2026-11-25T04:36:22.000Z",
+    "expires": "2026-11-25T04:55:53.000Z",
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-25T04:36:22.526Z",
-    "lastAccessed": "2025-11-25T04:36:27.027Z"
+    "creation": "2025-11-25T04:55:53.971Z",
+    "lastAccessed": "2025-11-25T04:55:58.749Z"
   },
   {
     "key": "sb",
     "value": "zjIjadeX8-Xbh45R9B-AMqRE",
-    "expires": "2026-11-25T04:36:22.000Z",
+    "expires": "2026-11-25T04:55:53.000Z",
     "domain": "facebook.com",
     "path": "/",
     "hostOnly": false,
-    "creation": "2025-11-25T04:36:22.526Z",
-    "lastAccessed": "2025-11-25T04:36:27.027Z"
+    "creation": "2025-11-25T04:55:53.972Z",
+    "lastAccessed": "2025-11-25T04:55:58.749Z"
   }
 ]
